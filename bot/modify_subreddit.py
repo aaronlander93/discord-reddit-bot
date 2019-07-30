@@ -1,78 +1,107 @@
 import return_content as con
 
 async def modify_subreddit(choice, subreddit, message, client, channel):
-    async def one():
+    #User interacting with the bot
+    user = message.author
+    
+    async def add_phrase():
+        #Receive phrase to add
         string_dict = con.get_stringdict()
-        await client.send_message(channel, 'What word/phrase would you like to add?')
-        msg = await client.wait_for_message(author=message.author, timeout=10)
+        await send_message('What word/phrase would you like to add?')
+        phrase = await receive_message(user)
 
-        test = msg.content in con.get_subdict()
-        while test == True:
-            await client.send_message(channel, 'Word/phrase already in use. Enter another.')
-            msg = await client.wait_for_message(author=message.author, timeout=10)
-            test = msg.content.lower() in con.get_stringdict()
+        #Test if phrase is in use
+        while phrase_used(phrase):
+            await send_message('Word/phrase already in use. Enter another.')
+            phrase = await receive_message(user)
 
-        string_dict[msg.content.lower()] = subreddit
-        await client.send_message(channel, 'Word/phrase added to subreddit.')
+        #Add phrase
+        string_dict[phrase] = subreddit
+        await send_message('Word/phrase added to subreddit.')
 
-    async def two():
-        await client.send_message(channel, 'What word/phrase would you like to remove?')
-        msg = await client.wait_for_message(author=message.author, timeout=10)
+    async def remove_phrase():
+        #Receive phrase to delete
+        await send_message('What word/phrase would you like to remove?')
+        phrase = await receive_message(user)
 
-        test = con.get_subname(msg)
+        #Test if phrase is associated with subreddit
+        while con.get_subname(phrase) != subreddit:
+            await send_message('Word/phrase not associated with r/' + subreddit)
 
-        while test == None or test != subreddit:
-            await client.send_message(channel, 'Word/phrase not associated with r/' + subreddit)
-            string = 'Subreddit is matched with the phrase(s) '
+            #List all phrases associated with subreddit
+            enum_phrases = enumerate_matched_phrases(subreddit)
+            await send_message(enum_phrases)
+            
+            await send_message('Which word/phrase would you like to remove?')
+            msg = await receive_message(muser)
 
-            for key, value in con.get_stringdict().items():
-                if subreddit == value:
-                    string += '"' + key + '",'
-            await client.send_message(channel, string)
-            await client.send_message(channel, 'Which word/phrase would you like to remove?')
-            msg = await client.wait_for_message(author=message.author, timeout=10)
-            test = string_sub_dict.get(msg.content.lower(), None)
+        #Remove phrase
+        string_dict = con.get_stringdict()
+        del string_dict[phrase]
+        await send_message(phrase + ' deleted from r/' + subreddit)
 
-        del string_sub_dict[msg.content.lower()]
-        await client.send_message(channel, msg.content.lower() + ' deleted from r/' + subreddit)
+        test_for_deletion(subreddit)
 
-        found = False
-        for key, value in string_sub_dict.items():
-            if subreddit == value:
-                found = True
-                break
-        if not found:
-            del sub_dict[subreddit]
+    async def remove_subreddit():
+        delete_sub(subreddit)        
+        await send_message('Subreddit removed.')
+        
+    async def send_message(message):
+        await client.send_message(channel, message)
 
-    async def three():
-        await client.send_message(channel, 'What subreddit would you like to remove?')
-        msg = await client.wait_for_message(author=message.author, timeout=10)
-
-        subreddit = sub_dict.get(msg.content.lower(), None)
-
-        while subreddit == None:
-            await client.send_message(channel, 'Subreddit not configured with Reddit Bot. Try again.')
-
-            await client.send_message(channel, 'What subreddit would you like to remove?')
-            msg = await client.wait_for_message(author=message.author, timeout=10)
-
-            subreddit = sub_dict.get(msg.content.lower(), None)
-
-        # Delete strings associated with sub
-        for key, value in string_sub_dict.items():
-            if subreddit == value:
-                del string_sub_dict[key]
-
-        # Delete sub from dictionary
-        del sub_dict[msg.content]
-
-        await client.send_message(channel, 'Subreddit removed.')
+    async def receive_message(user):
+        msg = await client.wait_for_message(author = user, timeout=10)
+        return msg.content.lower()
 
     if choice == '1':
-        await one()
+        await add_phrase()
     elif choice == '2':
-        await two()
+        await remove_phrase()
     elif choice == '3':
-        await three()
+        await remove_subreddit()
+        
+    
+    
+def phrase_used(phrase):
+    if phrase in con.get_stringdict():
+        return True
+    else:
+        return False
 
-  
+def enumerate_matched_phrases(subreddit):
+    string = 'Subreddit is matched with the phrase(s) '
+    string_dict = con.get_stringdict()
+
+    for key, value in string_dict.items():
+        if subreddit == value:
+            string += '"' + key + '",'
+    
+    return enum_phrases
+
+def test_for_deletion(subreddit):
+    found_sub = False
+    sub_dict = con.get_subdict()
+
+    #Test if any strings are attached to sub. If no strings attached to sub, delete the sub. 
+    for key in sub_dict.copy():
+        if subreddit == sub_dict[key]:
+            found_sub = True
+            break
+    if not found_sub:
+        delete_sub(subreddit)
+
+def delete_sub(subreddit):
+    # Delete strings associated with sub
+    string_dict = con.get_stringdict()
+    sub_dict = con.get_subdict()
+    
+    for key in string_dict.copy():
+        if string_dict[key] == subreddit:
+            del string_dict[key]
+            
+    # Delete sub from dictionary
+    del sub_dict[subreddit]
+    
+            
+
+            
