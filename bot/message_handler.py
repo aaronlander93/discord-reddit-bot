@@ -53,9 +53,6 @@ async def message_handler(message, client, channel):
             string = msg.content.lower()
                 
             con.create_subreddit_list(subreddit, string)
-            content = con.give_subreddit_content(string)
-            await channel.send(content)
-
     
 def enumerate_phrases(subreddit):
     string = 'Subreddit is already matched with the phrase(s) '

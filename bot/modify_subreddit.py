@@ -1,6 +1,9 @@
 import return_content as con
 
 async def modify_subreddit(choice, subreddit, message, client, channel):
+    def pred(m):
+        return m.author == message.author and m.channel == message.channel
+
     #User interacting with the bot
     user = message.author
     
@@ -47,10 +50,10 @@ async def modify_subreddit(choice, subreddit, message, client, channel):
         await send_message('Subreddit removed.')
         
     async def send_message(message):
-        await client.send_message(channel, message)
+        await channel.send(message)
 
     async def receive_message(user):
-        msg = await client.wait_for_message(author = user, timeout=10)
+        msg = await client.wait_for('message', check=pred)
         return msg.content.lower()
 
     if choice == '1':

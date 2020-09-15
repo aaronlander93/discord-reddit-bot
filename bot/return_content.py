@@ -21,10 +21,10 @@ def create_subreddit_list(subreddit, string):
     content = []
     sub_obj = reddit.subreddit(subreddit)
 
-    for submissions in sub_obj.hot(limit=30):
-        if submissions.stickied:
+    for submission in sub_obj.hot(limit=20):
+        if submission.stickied:
             continue
-        content.append(submissions)
+        content.append(submission.url)
     sub_dict[subreddit] = content
     string_to_sub[string] = subreddit
         
@@ -32,36 +32,34 @@ def give_subreddit_content(string):
     subreddit = string_to_sub[string]
         
     if sub_dict[subreddit]:
-        last_post = random.choice(sub_dict[subreddit])
-        sub_dict[subreddit].remove(last_post)
+        url = random.choice(sub_dict[subreddit])
+        sub_dict[subreddit].remove(url)
     else:
         sub_obj = reddit.subreddit(subreddit)
         content = []
 
-        for submissions in sub_obj.hot(limit=30):
-            if submissions.stickied:
+        for submission in sub_obj.hot(limit=20):
+            if submission.stickied:
                 continue
-            content.append(submissions)
+            content.append(submission.url)
         sub_dict[subreddit] = content
 
-        last_post = random.choice(sub_dict[subreddit].url)
-        sub_dict[subreddit].remove(last_post)
+        url = random.choice(sub_dict[subreddit])
+        sub_dict[subreddit].remove(url)
  
-    url = last_post.url
-
     return url
 
 def give_random_content(subreddit):
     sub_obj = reddit.subreddit(subreddit)
     content = []
 
-    for submissions in sub_obj.hot(limit=5):
-        if submissions.stickied:
+    for submission in sub_obj.hot(limit=5):
+        if submission.stickied:
             continue
         elif content:
             break
         else:
-            content.append(submissions.url)
+            content.append(submission.url)
     return content[0]
 
 def get_subname(string):
